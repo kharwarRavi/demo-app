@@ -4,34 +4,76 @@ import GridView from "../components/GridView";
 import AddIcon from "@material-ui/icons/Add";
 import { userBoardsData } from "../constants";
 import _ from "underscore";
+import DialogBox from "../components/DialogBox";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
     padding: "1rem",
+    backgroundColor: "#f2f4f8",
+    height: "100%",
   },
   paper: {
     padding: theme.spacing(2),
     textAlign: "center",
-    color: theme.palette.text.secondary,
+    color: "#000000",
+    position: "relative",
   },
+  icon: {},
 }));
 
 const Dashboard = () => {
   const classes = useStyles();
   const [userBoards, setUserBoards] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
-  const handleAddClick = () => {
+  const [details, setDetails] = useState({
+    title: "Add User",
+    label: "User Name",
+    key: "user",
+  });
+
+  const handleClick = (key, value = null, id) => {
+    const data = {
+      title: `${value ? "Edit" : "Add"} ${key}`,
+      label: `${key} Name`,
+      key: key.toLowerCase(),
+    };
+    if (value && id) {
+      data["value"] = value;
+      data[id] = id;
+    }
+    setDetails(() => ({ ...data }));
     setShowDialog(true);
   };
 
   const addUser = (user) => {
     if (user && !_.isEmpty(user)) {
-        setUserBoards([...userBoards, ...user]);
-        userBoardsData.push(user);
-        setShowDialog(false);
+      setUserBoards([...userBoards, ...user]);
+      userBoardsData.push(user);
+      setShowDialog(false);
+      setDetails({});
     } else {
-        // TODO: display message
+      // TODO: display message
+    }
+  };
+
+  const handleDelete = (id) => {
+    let searchIndex = -1;
+    searchIndex = userBoards?.findIndex((user) => user.userID === id);
+    if (searchIndex < 0) {
+      userBoards?.forEach((user) => {
+        searchIndex = user.taskDetails?.findIndex((task) => task.taskID === id);
+        if (searchIndex > -1) {
+          const newData = userBoards?.map((user) =>
+            user.taskDetails?.filter((task) => task.taskID !== id)
+          );
+          //   setUserBoards();
+          return;
+        }
+      });
+      console.log("searchIndex", searchIndex);
+    } else {
+      setUserBoards([...userBoards?.filter((user) => user.userID !== id)]);
     }
   };
 
@@ -44,7 +86,8 @@ const Dashboard = () => {
       <Box mb={3} align="right">
         <Button
           variant="contained"
-          onClick={handleAddClick}
+          size="small"
+          onClick={() => handleClick("User")}
           title="Add User"
           color="primary"
         >
@@ -53,9 +96,21 @@ const Dashboard = () => {
       </Box>
       <Grid container alignItems="center" spacing={3}>
         {userBoards?.map((item) => (
-          <GridView data={item} classes={classes} />
+          <GridView
+            data={item}
+            key={item.userID}
+            classes={classes}
+            handleClick={handleClick}
+            handleDelete={handleDelete}
+          />
         ))}
       </Grid>
+      <DialogBox
+        details={details}
+        open={showDialog}
+        handleClose={setShowDialog}
+        handle={addUser}
+      />
     </div>
   );
 };

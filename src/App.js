@@ -1,5 +1,6 @@
 import React from "react";
 import "./App.css";
+import 'fontsource-roboto';
 import Dashboard from "./scenes/dashboard";
 
 const App = () => {
